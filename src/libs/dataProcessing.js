@@ -23,7 +23,7 @@ const getCryptoPricesOnRange = async (data) => {
       );
     }
   }
-  console.log(dayPricesArr);
+  // console.log(dayPricesArr);
 
   return getMaxDecreasingPriceDays(dayPricesArr);
 };
@@ -56,8 +56,8 @@ const sliceCrytpoDataArray = (arr, from, to) => {
     for (let index = 0; index < arr.length; index += arr.length / daysQty) {
       let myChunk = arr.slice(index, index + arr.length / daysQty);
       tempArray.push(myChunk);
-      return tempArray;
     }
+    return tempArray;
   } else {
     return arr;
   }
