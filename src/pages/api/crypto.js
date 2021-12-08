@@ -36,7 +36,7 @@ const handler = async (req, res) => {
 
 const getCryptoData = async (req, res) => {
   try {
-    let resultCryptoData = [];
+    let resultCryptoData;
     let msg = [];
     let reqData = {};
     let cryptoAsset;
@@ -60,12 +60,12 @@ const getCryptoData = async (req, res) => {
         });
       }
     }
-    resultCryptoData.length > 0
-      ? res.status(201).json(resultCryptoData)
+    resultCryptoData > 0
+      ? res.status(200).json(resultCryptoData)
       : res.json(msg);
   } catch (error) {
     return res.status(400).json({
-      message: 'Invalid Request Method',
+      message: `Invalid Request Method: check requested asset's symbol`,
       error: error.message,
     });
   }
