@@ -3,7 +3,7 @@ const {
   checkIsRequestDate,
 } = require('../../libs/requestProcessing');
 
-const { getCryptoPricesOnRange } = require('../../libs/dataProcessing');
+const { getCryptoDataOnRange } = require('../../libs/dataProcessing');
 
 const handler = async (req, res) => {
   const { method, headers } = req;
@@ -53,14 +53,14 @@ const getCryptoData = async (req, res) => {
         reqData.from = req.query.from;
         reqData.to = req.query.to;
         reqData.asset = cryptoAsset;
-        resultCryptoData = await getCryptoPricesOnRange(reqData);
+        resultCryptoData = await getCryptoDataOnRange(reqData);
       } else {
         msg.push({
           message: 'Wrong dates',
         });
       }
     }
-    resultCryptoData > 0
+    resultCryptoData.maxDescDays > 0
       ? res.status(200).json(resultCryptoData)
       : res.json(msg);
   } catch (error) {

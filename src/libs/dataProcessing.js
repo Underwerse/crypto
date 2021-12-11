@@ -1,31 +1,82 @@
-const getCryptoPricesOnRange = async (data) => {
+// const getAllCryptoData = async (data) => {
+//   let days = getCryptoPricesOnRange(data)[0];
+//   let volume = getCryptoVolumeOnRange(data);
+//   return { days, volume };
+// };
+
+// const getCryptoVolumeOnRange = async (data) => {
+
+// }
+
+const getCryptoDataOnRange = async (data) => {
+  let finalResult = {};
+
   let cryptoId = await getCryptoId(data.asset);
   let from = new Date(data.from).valueOf() / 1000;
   let to = new Date(data.to).valueOf() / 1000 + 24 * 60 * 60;
-  let apiUrlRange = `https://api.coingecko.com/api/v3/coins/${cryptoId}/market_chart/range?vs_currency=usd&from=${from}&to=${to}`;
+  let apiUrlRange = `https://api.coingecko.com/api/v3/coins/${cryptoId}/market_chart/range?vs_currency=eur&from=${from}&to=${to}`;
 
   let receivedData = await getRangedCryptoData(apiUrlRange);
-  let arr = receivedData.prices.map(
+
+  let pricesArr = receivedData.prices.map(
     (el) => new Date(el[0]).toISOString().slice(0, 10) + ', ' + el[1]
   );
 
-  let slicedArr = sliceCrytpoDataArray(arr, data.from, data.to);
-  let dayPricesArr = [];
+  let volumesArr = receivedData.total_volumes.map(
+    (el) => new Date(el[0]).toISOString().slice(0, 10) + ', ' + el[1]
+  );
 
-  if (Array.isArray(slicedArr[0])) {
-    dayPricesArr = slicedArr.map(
+  let slicedPricesArr = sliceCrytpoDataArray(pricesArr, data.from, data.to);
+  let slicedVolumesArr = sliceCrytpoDataArray(volumesArr, data.from, data.to);
+  let dayPricesArr = [];
+  let dayVolumesArr = [];
+  let daysAndVolumes = [];
+  let uniqueDates = [];
+
+  if (Array.isArray(slicedPricesArr[0])) {
+    dayPricesArr = slicedPricesArr.map(
       (el) => el[el.length - 1].split(', ')[1] - el[0].split(', ')[1]
     );
+
+    slicedVolumesArr.map((el) => {
+      dayVolumesArr.push(getAverage(el));
+      uniqueDates.push(el[0].split(', ')[0]);
+      daysAndVolumes.push(el[0].split(', ')[0] + ', ' + getAverage(el));
+    });
   } else {
-    for (let i = 0; i < slicedArr.length - 1; i++) {
+    for (let i = 0; i < slicedPricesArr.length - 1; i++) {
       dayPricesArr.push(
-        slicedArr[i + 1].split(', ')[1] - slicedArr[i].split(', ')[1]
+        slicedPricesArr[i + 1].split(', ')[1] -
+          slicedPricesArr[i].split(', ')[1]
       );
     }
+    dayVolumesArr = slicedVolumesArr.map((el) => parseFloat(el.split(', ')[1]));
+    uniqueDates = slicedVolumesArr.map((el) => el.split(', ')[0]);
   }
-  // console.log(dayPricesArr);
 
-  return getMaxDecreasingPriceDays(dayPricesArr);
+  finalResult.maxDescDays = getMaxDecreasingPriceDays(dayPricesArr);
+  finalResult.maxVolume = getHighestVolumeData(dayVolumesArr).maxVolume;
+  finalResult.maxVolumeDate =
+    uniqueDates[getHighestVolumeData(dayVolumesArr).index];
+
+  return finalResult;
+};
+
+const getAverage = (el) => {
+  let arr = el.map((el) => parseFloat(el.split(', ')[1]));
+  let average = arr.reduce((a, b) => a + b) / arr.length;
+  return average;
+};
+
+const getHighestVolumeData = (arr) => {
+  let res = {
+    index: 0,
+    maxVolume: 0,
+  };
+  res.maxVolume = Math.max.apply(null, arr);
+  res.index = arr.indexOf(res.maxVolume);
+
+  return res;
 };
 
 const getMaxDecreasingPriceDays = (arr) => {
@@ -79,5 +130,5 @@ const getRangedCryptoData = async (readyUrl) => {
 };
 
 module.exports = {
-  getCryptoPricesOnRange,
+  getCryptoDataOnRange,
 };
