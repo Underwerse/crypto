@@ -43,7 +43,7 @@ const getCryptoData = async (req, res) => {
 
     typeof req.query.asset != 'undefined'
       ? (cryptoAsset = req.query.asset)
-      : (cryptoAsset = 'bitcoin');
+      : (cryptoAsset = 'btc');
 
     if (req.query.from && req.query.to) {
       if (
@@ -60,9 +60,10 @@ const getCryptoData = async (req, res) => {
         });
       }
     }
-    resultCryptoData.maxDescDays > 0
-      ? res.status(200).json(resultCryptoData)
-      : res.json(msg);
+
+    msg.length > 0
+      ? res.status(400).json(msg)
+      : res.status(200).json(resultCryptoData);
   } catch (error) {
     return res.status(400).json({
       message: `Invalid Request Method: check requested asset's symbol`,
