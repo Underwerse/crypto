@@ -5,6 +5,12 @@ const {
 
 const { getCryptoDataOnRange } = require('../../libs/dataProcessing');
 
+/**
+ * main request-handle function
+ * @param {Object} req - http-request
+ * @param {Object} res - http-response
+ * @returns crypto-data in case of GET-method and POST-result if POST-method
+ */
 const handler = async (req, res) => {
   const { method, headers } = req;
 
@@ -34,6 +40,12 @@ const handler = async (req, res) => {
   }
 };
 
+/**
+ *
+ * @param {Object} req - http-request
+ * @param {Object} res - http-response
+ * @returns JSON-formatted crypto-data
+ */
 const getCryptoData = async (req, res) => {
   try {
     let resultCryptoData;

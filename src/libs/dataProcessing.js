@@ -1,3 +1,8 @@
+/**
+ *
+ * @param {object} data - request data
+ * @returns object with fetched and filtered crypto data
+ */
 const getCryptoDataOnRange = async (data) => {
   let finalResult = {};
 
@@ -82,12 +87,22 @@ const getCryptoDataOnRange = async (data) => {
   return finalResult;
 };
 
+/**
+ *
+ * @param {Array} el - array of String-elements in format 'date, value'
+ * @returns Float average value
+ */
 const getAverage = (el) => {
   let arr = el.map((el) => parseFloat(el.split(', ')[1]));
   let average = arr.reduce((a, b) => a + b) / arr.length;
   return average;
 };
 
+/**
+ *
+ * @param {Array} arr - array of daily volumes
+ * @returns object with maximum value and it's index
+ */
 const getHighestVolumeData = (arr) => {
   let res = {
     index: 0,
@@ -99,6 +114,11 @@ const getHighestVolumeData = (arr) => {
   return res;
 };
 
+/**
+ *
+ * @param {Array} arr - array of daily price differences
+ * @returns maximum number of consistently decreasing days
+ */
 const getMaxDecreasingPriceDays = (arr) => {
   let maxCounter = 0;
   let negativeCountersArr = [];
@@ -113,21 +133,47 @@ const getMaxDecreasingPriceDays = (arr) => {
       continue;
     }
   }
+  if (negativeCountersArr.length === 0) {
+    negativeCountersArr.push(maxCounter);
+  }
   return getMaxFromArray(negativeCountersArr);
 };
 
+/**
+ *
+ * @param {Array} arr - array of numbers
+ * @returns maximum value
+ */
 const getMaxFromArray = (arr) => {
   return Math.max.apply(null, arr);
 };
 
+/**
+ *
+ * @param {Array} arr - array of numbers
+ * @returns minimum value
+ */
 const getMinFromArray = (arr) => {
   return Math.min.apply(null, arr);
 };
 
+/**
+ *
+ * @param {Array} arr - array of daily price differences
+ * @returns true if all the elements are negative
+ */
 const checkIfAllDescending = (arr) => {
   return !arr.some((el) => el > 0);
 };
 
+/**
+ *
+ * @param {Array} arr - array of String-elements in format 'date, value'
+ * @param {*} from - start date in format 'YYYY-mm-dd'
+ * @param {*} to - end date in format 'YYYY-mm-dd'
+ * @returns array of arrays of devided by different dates
+ * String-elements in format 'date, value'
+ */
 const sliceCrytpoDataArray = (arr, from, to) => {
   let start = new Date(from);
   let end = new Date(to);
@@ -147,6 +193,11 @@ const sliceCrytpoDataArray = (arr, from, to) => {
   }
 };
 
+/**
+ *
+ * @param {String} cryptoName - three-letters asset's code (like btc, xrp, eth etc)
+ * @returns official asset's long name (like bitcoin, ripple, etherium etc)
+ */
 const getCryptoId = async (cryptoName) => {
   const apiUrl = 'https://api.coingecko.com/api/v3/coins/list';
 
@@ -156,6 +207,11 @@ const getCryptoId = async (cryptoName) => {
   return coinsData.find((asset) => asset.symbol === cryptoName).id;
 };
 
+/**
+ *
+ * @param {String} readyUrl - defined by user's request API-url
+ * @returns RAW array of crypto data from API
+ */
 const getRangedCryptoData = async (readyUrl) => {
   let response = await fetch(readyUrl);
   return response.json();
@@ -163,4 +219,13 @@ const getRangedCryptoData = async (readyUrl) => {
 
 module.exports = {
   getCryptoDataOnRange,
+  getAverage,
+  getHighestVolumeData,
+  getMaxDecreasingPriceDays,
+  getMaxFromArray,
+  getMinFromArray,
+  checkIfAllDescending,
+  sliceCrytpoDataArray,
+  getCryptoId,
+  getRangedCryptoData,
 };
