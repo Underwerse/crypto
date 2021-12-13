@@ -31,9 +31,6 @@ describe('Test cases for crypto-API', async () => {
     '2021-12-03, 45150.117756077096',
   ];
 
-  let from = '2021-12-01';
-  let to = '2021-12-03';
-
   it('Given the dates in different formatting, should always return true', () => {
     const reqDate1 = '2021-03-03';
     const reqDate2 = '01-01-2020';
