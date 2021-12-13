@@ -57,7 +57,7 @@ describe('Test cases for crypto-API', async () => {
   });
 
   it('Given an array of crypto data, should return sliced array with daily data', () => {
-    let result = sliceCrytpoDataArray(datePricesArr, from, to);
+    let result = sliceCrytpoDataArray(datePricesArr, 3);
     assert.strictEqual(result.length, 3);
     assert.strictEqual(result[1].length, 3);
   });
@@ -82,7 +82,7 @@ describe('Test cases for crypto-API', async () => {
   });
 
   it(`Given an array of daily prices differences, should return an maximum number of continiously decreasing days`, () => {
-    let dataArr = sliceCrytpoDataArray(datePricesArr, from, to);
+    let dataArr = sliceCrytpoDataArray(datePricesArr, 3);
     let arr = dataArr.map(
       (el) => el[el.length - 1].split(', ')[1] - el[0].split(', ')[1]
     );
