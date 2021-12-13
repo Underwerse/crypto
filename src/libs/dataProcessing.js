@@ -12,6 +12,10 @@ const getCryptoDataOnRange = async (data) => {
   let uniqueDates = getAllDatesInRange(from, to);
   let apiUrlRange = '';
 
+  /* 
+    This condition takes into account the last provided date
+    (depending on data, which has been got from API)
+  */
   uniqueDates.length > 90
     ? (apiUrlRange = `https://api.coingecko.com/api/v3/coins/${cryptoId}/market_chart/range?vs_currency=eur&from=${
         from / 1000
@@ -20,20 +24,25 @@ const getCryptoDataOnRange = async (data) => {
         from / 1000
       }&to=${24 * 60 * 60 + to / 1000}`);
 
+  // Get raw data from API
   let receivedData = await getRangedCryptoData(apiUrlRange);
 
+  // Get prices array from raw API data
   let pricesArr = receivedData.prices.map(
     (el) => parseTimestampToIsoDate(el[0]).slice(0, 10) + ', ' + el[1]
   );
 
+  // Get volumes array from raw API data
   let volumesArr = receivedData.total_volumes.map(
     (el) => parseTimestampToIsoDate(el[0]).slice(0, 10) + ', ' + el[1]
   );
 
+  // Seperate prices array by different dates
   let slicedByDatesPricesArr = sliceCrytpoDataArray(
     pricesArr,
     uniqueDates.length
   );
+  // Separate volumes array by different dates
   let slicedByDatesVolumesArr = sliceCrytpoDataArray(
     volumesArr,
     uniqueDates.length
@@ -42,29 +51,30 @@ const getCryptoDataOnRange = async (data) => {
   let dayPricesArrDayDiffs = [];
   let dayPricesArr = [];
   let dayVolumesArr = [];
-  let daysAndVolumes = [];
 
+  // Check if every date data consists several price values (depends on API)
   if (Array.isArray(slicedByDatesPricesArr[0])) {
     let tempPricesChunk = [];
 
     slicedByDatesPricesArr.map((el) => {
+      // Get daily prices differences' array
       dayPricesArrDayDiffs.push(
         el[el.length - 1].split(', ')[1] - el[0].split(', ')[1]
       );
+      // Get all the prices within the same date
       tempPricesChunk = el.map((el) => parseFloat(el.split(', ')[1]));
       let minPriceInChunk = getMinFromArray(tempPricesChunk);
       let maxPriceInChunk = getMaxFromArray(tempPricesChunk);
       let avgPriceInChunk =
         tempPricesChunk.reduce((a, b) => a + b) / tempPricesChunk.length;
+      // Get min, max and avg price values within one day
       dayPricesArr.push(
         `minPrice: ${minPriceInChunk}, maxPrice: ${maxPriceInChunk}, avgPrice: ${avgPriceInChunk}`
       );
     });
 
-    slicedByDatesVolumesArr.map((el) => {
-      dayVolumesArr.push(getAverage(el));
-      daysAndVolumes.push(el[0].split(', ')[0] + ', ' + getAverage(el));
-    });
+    // Get daily volumes' array
+    dayVolumesArr = slicedByDatesVolumesArr.map((el) => getAverage(el));
   } else {
     for (let i = 0; i < slicedByDatesPricesArr.length - 1; i++) {
       dayPricesArrDayDiffs.push(
@@ -73,33 +83,42 @@ const getCryptoDataOnRange = async (data) => {
       );
     }
 
+    // Get array of prices data without dates
     dayPricesArr = slicedByDatesPricesArr.map((el) =>
       parseFloat(el.split(', ')[1])
     );
 
+    // Get array of volumes data without dates
     dayVolumesArr = slicedByDatesVolumesArr.map((el) =>
       parseFloat(el.split(', ')[1])
     );
   }
 
+  // Get all the necessary data into result object
   finalResult.maxDescDays = getMaxDecreasingPriceDays(dayPricesArrDayDiffs);
   finalResult.maxVolumeInEur = getHighestVolumeData(dayVolumesArr).maxVolume;
   finalResult.maxVolumeDate =
     uniqueDates[getHighestVolumeData(dayVolumesArr).index];
 
+  // Check if all the days was descending by price
   if (checkIfAllDescending(dayPricesArrDayDiffs)) {
     finalResult.whenToBuy = `Should't buy crypto at all`;
     finalResult.whenToSell = `No time to sell crypto`;
   } else {
     if (Array.isArray(slicedByDatesPricesArr[0])) {
-      let minPricesArr = dayPricesArr.map((el) => {
-        return el.split(', ')[0].split('minPrice: ')[1];
-      });
+      // Get min price date
+      let minPricesArr = dayPricesArr.map(
+        (el) => el.split(', ')[0].split('minPrice: ')[1]
+      );
       let minPriceFromArr = getMinFromArray(minPricesArr);
-      let maxPricesArr = dayPricesArr.map((el) => {
-        return el.split(', ')[1].split('maxPrice: ')[1];
-      });
+
+      // Get max price date
+      let maxPricesArr = dayPricesArr.map(
+        (el) => el.split(', ')[1].split('maxPrice: ')[1]
+      );
       let maxPriceFromArr = getMaxFromArray(maxPricesArr);
+
+      // Finalize result object with the last got data
       finalResult.whenToBuy =
         uniqueDates[minPricesArr.indexOf(String(minPriceFromArr))];
       finalResult.whenToSell =
@@ -115,14 +134,30 @@ const getCryptoDataOnRange = async (data) => {
   return finalResult;
 };
 
+/**
+ * Function parses ISO date into timestamp
+ * @param {String} date - date in ISO format 'YYYY-mm-dd'
+ * @returns timestamp (milliseconds)
+ */
 const parseIsoDateToTimestamp = (date) => {
   return new Date(date).valueOf();
 };
 
+/**
+ * Function parses timestamp into ISO date
+ * @param {Number} timestamp date in timestamp format (milliseconds)
+ * @returns date in ISO format 'YYYY-mm-dd'
+ */
 const parseTimestampToIsoDate = (timestamp) => {
   return new Date(timestamp).toISOString();
 };
 
+/**
+ * Function gets all the dates within provided range
+ * @param {Number} fromTimestamp - date in timestamp format (milliseconds)
+ * @param {Number} toTimestamp - date in timestamp format (milliseconds)
+ * @returns array of Iso dates in format 'YYYY-mm-dd' within provided range
+ */
 const getAllDatesInRange = (fromTimestamp, toTimestamp) => {
   let resArr = [fromTimestamp];
   while (resArr[resArr.length - 1] < toTimestamp) {
