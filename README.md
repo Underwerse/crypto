@@ -8,17 +8,15 @@ npm run dev
 yarn dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-[API routes] can be accessed on [http://localhost:3000/api/crypto](http://localhost:3000/api/crypto?from={date from, formatted in 'YYYY-mm-dd'}&to={date to, formatted in 'YYYY-mm-dd'}).
-'from' - required request parameter
-'to' - required request parameter
+[API routes] can be accessed on [http://localhost:3000/api/crypto?from={}&to={}].
+'from' - required request parameter 'date from', formatted in 'YYYY-mm-dd';
+'to' - required request parameter 'date to', formatted in 'YYYY-mm-dd'.
 full-formatted request be like:
-http://localhost:3000/api/crypto?from=2021-01-31&to=2021-12-12
+[http://localhost:3000/api/crypto?from=2021-01-31&to=2021-12-12]
 ## Learn More
 
 This API allows to set interested cryptoasset by providing three-letter asset's code (default is 'btc'), like 'asset={your three-letter cryptoasset code}', so full-formatted request be like:
-http://localhost:3000/api/crypto?from=2021-01-31&to=2021-12-12&asset=xrp
+[http://localhost:3000/api/crypto?from=2021-01-31&to=2021-12-12&asset=xrp]
 
 Result JSON-object includes these fields:
 1. maxDescDays - how many days is the longest bearish (downward) trend within a given date range;
