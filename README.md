@@ -8,7 +8,7 @@ npm run dev
 yarn dev
 ```
 
-[API routes] can be accessed on [http://localhost:3000/api/crypto?from={}&to={}].
+[API routes] can be accessed on (http://localhost:3000/api/crypto?from={}&to={}).
 'from' - required request parameter 'date from', formatted in 'YYYY-mm-dd';
 'to' - required request parameter 'date to', formatted in 'YYYY-mm-dd'.
 full-formatted request be like:
