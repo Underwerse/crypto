@@ -1,3 +1,8 @@
+/**
+ * Function checks if headers correct or not
+ * @param {Object} headers - request-headers
+ * @returns object with validity-flag and message
+ */
 const checkIsHeaderOk = (headers) => {
   let res = { isValid: false, message: '' };
   if (headers['content-type'] === 'application/json') {
@@ -9,12 +14,14 @@ const checkIsHeaderOk = (headers) => {
   return res;
 };
 
+/**
+ * Function checks if provided date-value in correct JS-Date format or not
+ * @param {Date} data - date in String-format
+ * @returns true if provided string in JS-Date format
+ */
 const checkIsRequestDate = (data) => !Number.isNaN(Date.parse(data));
-
-const checkIsRequestNumber = (seconds) => !Number.isNaN(seconds);
 
 module.exports = {
   checkIsHeaderOk,
   checkIsRequestDate,
-  checkIsRequestNumber,
 };

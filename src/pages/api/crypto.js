@@ -3,8 +3,17 @@ const {
   checkIsRequestDate,
 } = require('../../libs/requestProcessing');
 
-const { getCryptoDataOnRange } = require('../../libs/dataProcessing');
+const {
+  getCryptoDataOnRange,
+  parseIsoDateToTimestamp,
+} = require('../../libs/dataProcessing');
 
+/**
+ * main request-handle function
+ * @param {Object} req - http-request
+ * @param {Object} res - http-response
+ * @returns crypto-data in case of GET-method and POST-result if POST-method
+ */
 const handler = async (req, res) => {
   const { method, headers } = req;
 
@@ -34,6 +43,12 @@ const handler = async (req, res) => {
   }
 };
 
+/**
+ *
+ * @param {Object} req - http-request
+ * @param {Object} res - http-response
+ * @returns JSON-formatted crypto-data
+ */
 const getCryptoData = async (req, res) => {
   try {
     let resultCryptoData;
@@ -48,7 +63,9 @@ const getCryptoData = async (req, res) => {
     if (req.query.from && req.query.to) {
       if (
         checkIsRequestDate(req.query.from) &&
-        checkIsRequestDate(req.query.to)
+        checkIsRequestDate(req.query.to) &&
+        parseIsoDateToTimestamp(req.query.to) >
+          parseIsoDateToTimestamp(req.query.from)
       ) {
         reqData.from = req.query.from;
         reqData.to = req.query.to;
