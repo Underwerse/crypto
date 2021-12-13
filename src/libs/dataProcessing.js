@@ -7,52 +7,51 @@ const getCryptoDataOnRange = async (data) => {
   let finalResult = {};
 
   let cryptoId = await getCryptoId(data.asset);
-  let from = new Date(data.from).valueOf() / 1000;
-  let to = new Date(data.to).valueOf() / 1000 + 24 * 60 * 60;
-  let apiUrlRange = `https://api.coingecko.com/api/v3/coins/${cryptoId}/market_chart/range?vs_currency=eur&from=${from}&to=${to}`;
+  let from = parseIsoDateToTimestamp(data.from);
+  let to = parseIsoDateToTimestamp(data.to);
+  let uniqueDates = getAllDatesInRange(from, to);
+  let apiUrlRange = '';
+
+  uniqueDates.length > 90
+    ? (apiUrlRange = `https://api.coingecko.com/api/v3/coins/${cryptoId}/market_chart/range?vs_currency=eur&from=${
+        from / 1000
+      }&to=${to / 1000}`)
+    : (apiUrlRange = `https://api.coingecko.com/api/v3/coins/${cryptoId}/market_chart/range?vs_currency=eur&from=${
+        from / 1000
+      }&to=${24 * 60 * 60 + to / 1000}`);
 
   let receivedData = await getRangedCryptoData(apiUrlRange);
 
   let pricesArr = receivedData.prices.map(
-    (el) => new Date(el[0]).toISOString().slice(0, 10) + ', ' + el[1]
+    (el) => parseTimestampToIsoDate(el[0]).slice(0, 10) + ', ' + el[1]
   );
 
   let volumesArr = receivedData.total_volumes.map(
-    (el) => new Date(el[0]).toISOString().slice(0, 10) + ', ' + el[1]
+    (el) => parseTimestampToIsoDate(el[0]).slice(0, 10) + ', ' + el[1]
   );
 
   let slicedByDatesPricesArr = sliceCrytpoDataArray(
     pricesArr,
-    data.from,
-    data.to
+    uniqueDates.length
   );
   let slicedByDatesVolumesArr = sliceCrytpoDataArray(
     volumesArr,
-    data.from,
-    data.to
+    uniqueDates.length
   );
+
   let dayPricesArrDayDiffs = [];
   let dayPricesArr = [];
   let dayVolumesArr = [];
   let daysAndVolumes = [];
-  let uniqueDates = [];
 
   if (Array.isArray(slicedByDatesPricesArr[0])) {
     let tempPricesChunk = [];
 
-    for (let i = 0; i < slicedByDatesPricesArr.length; i++) {
-      let elArrLength = slicedByDatesPricesArr[i].length;
+    slicedByDatesPricesArr.map((el) => {
       dayPricesArrDayDiffs.push(
-        slicedByDatesPricesArr[i][elArrLength - 1].split(', ')[1] -
-          slicedByDatesPricesArr[i][0].split(', ')[1]
+        el[el.length - 1].split(', ')[1] - el[0].split(', ')[1]
       );
-
-      tempPricesChunk = [];
-      for (let j = 0; j < slicedByDatesPricesArr[i].length; j++) {
-        tempPricesChunk.push(
-          parseFloat(slicedByDatesPricesArr[i][j].split(', ')[1])
-        );
-      }
+      tempPricesChunk = el.map((el) => parseFloat(el.split(', ')[1]));
       let minPriceInChunk = getMinFromArray(tempPricesChunk);
       let maxPriceInChunk = getMaxFromArray(tempPricesChunk);
       let avgPriceInChunk =
@@ -60,11 +59,10 @@ const getCryptoDataOnRange = async (data) => {
       dayPricesArr.push(
         `minPrice: ${minPriceInChunk}, maxPrice: ${maxPriceInChunk}, avgPrice: ${avgPriceInChunk}`
       );
-    }
+    });
 
     slicedByDatesVolumesArr.map((el) => {
       dayVolumesArr.push(getAverage(el));
-      uniqueDates.push(el[0].split(', ')[0]);
       daysAndVolumes.push(el[0].split(', ')[0] + ', ' + getAverage(el));
     });
   } else {
@@ -82,7 +80,6 @@ const getCryptoDataOnRange = async (data) => {
     dayVolumesArr = slicedByDatesVolumesArr.map((el) =>
       parseFloat(el.split(', ')[1])
     );
-    uniqueDates = slicedByDatesVolumesArr.map((el) => el.split(', ')[0]);
   }
 
   finalResult.maxDescDays = getMaxDecreasingPriceDays(dayPricesArrDayDiffs);
@@ -116,6 +113,23 @@ const getCryptoDataOnRange = async (data) => {
   }
 
   return finalResult;
+};
+
+const parseIsoDateToTimestamp = (date) => {
+  return new Date(date).valueOf();
+};
+
+const parseTimestampToIsoDate = (timestamp) => {
+  return new Date(timestamp).toISOString();
+};
+
+const getAllDatesInRange = (fromTimestamp, toTimestamp) => {
+  let resArr = [fromTimestamp];
+  while (resArr[resArr.length - 1] < toTimestamp) {
+    resArr.push(resArr[resArr.length - 1] + 24 * 60 * 60 * 1000);
+  }
+
+  return resArr.map((el) => parseTimestampToIsoDate(el).slice(0, 10));
 };
 
 /**
@@ -194,7 +208,7 @@ const getMinFromArray = (arr) => {
  * @returns true if all the elements are negative
  */
 const checkIfAllDescending = (arr) => {
-  return !arr.some((el) => el > 0);
+  return arr.every((el) => el < 0);
 };
 
 /**
@@ -205,22 +219,17 @@ const checkIfAllDescending = (arr) => {
  * @returns array of arrays of devided by different dates
  * String-elements in format 'date, value'
  */
-const sliceCrytpoDataArray = (arr, from, to) => {
-  let start = new Date(from);
-  let end = new Date(to);
-
-  let daysQty = 1 + (end - start) / 1000 / 60 / 60 / 24;
-
+const sliceCrytpoDataArray = (arr, daysQty) => {
   let tempArray = [];
 
-  if (daysQty <= 90) {
+  if (daysQty > 90) {
+    return arr;
+  } else {
     for (let index = 0; index < arr.length; index += arr.length / daysQty) {
       let myChunk = arr.slice(index, index + arr.length / daysQty);
       tempArray.push(myChunk);
     }
     return tempArray;
-  } else {
-    return arr;
   }
 };
 
@@ -259,4 +268,5 @@ module.exports = {
   sliceCrytpoDataArray,
   getCryptoId,
   getRangedCryptoData,
+  parseIsoDateToTimestamp,
 };

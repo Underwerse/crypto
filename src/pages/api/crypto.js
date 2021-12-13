@@ -3,7 +3,10 @@ const {
   checkIsRequestDate,
 } = require('../../libs/requestProcessing');
 
-const { getCryptoDataOnRange } = require('../../libs/dataProcessing');
+const {
+  getCryptoDataOnRange,
+  parseIsoDateToTimestamp,
+} = require('../../libs/dataProcessing');
 
 /**
  * main request-handle function
@@ -60,7 +63,9 @@ const getCryptoData = async (req, res) => {
     if (req.query.from && req.query.to) {
       if (
         checkIsRequestDate(req.query.from) &&
-        checkIsRequestDate(req.query.to)
+        checkIsRequestDate(req.query.to) &&
+        parseIsoDateToTimestamp(req.query.to) >
+          parseIsoDateToTimestamp(req.query.from)
       ) {
         reqData.from = req.query.from;
         reqData.to = req.query.to;
