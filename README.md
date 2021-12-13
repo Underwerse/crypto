@@ -9,9 +9,9 @@ yarn dev
 ```
 
 API route can be accessed on (http://localhost:3000/api/crypto?from={}&to={}),
-where:
-'from' - required request parameter 'date from', formatted in 'YYYY-mm-dd';
-'to' - required request parameter 'date to', formatted in 'YYYY-mm-dd'.
+> where:
+> > 'from' - required request parameter 'date from', formatted in 'YYYY-mm-dd';
+> > 'to' - required request parameter 'date to', formatted in 'YYYY-mm-dd'.
 full-formatted request be like:
 
 (http://localhost:3000/api/crypto?from=2021-01-31&to=2021-12-12)
