@@ -38,13 +38,29 @@ const getCryptoDataOnRange = async (data) => {
   let uniqueDates = [];
 
   if (Array.isArray(slicedByDatesPricesArr[0])) {
-    dayPricesArrDayDiffs = slicedByDatesPricesArr.map(
-      (el) => el[el.length - 1].split(', ')[1] - el[0].split(', ')[1]
-    );
+    let tempPricesChunk = [];
 
-    dayPricesArr = slicedByDatesPricesArr.map((el) =>
-      parseFloat(el[0].split(', ')[1])
-    );
+    for (let i = 0; i < slicedByDatesPricesArr.length; i++) {
+      let elArrLength = slicedByDatesPricesArr[i].length;
+      dayPricesArrDayDiffs.push(
+        slicedByDatesPricesArr[i][elArrLength - 1].split(', ')[1] -
+          slicedByDatesPricesArr[i][0].split(', ')[1]
+      );
+
+      tempPricesChunk = [];
+      for (let j = 0; j < slicedByDatesPricesArr[i].length; j++) {
+        tempPricesChunk.push(
+          parseFloat(slicedByDatesPricesArr[i][j].split(', ')[1])
+        );
+      }
+      let minPriceInChunk = getMinFromArray(tempPricesChunk);
+      let maxPriceInChunk = getMaxFromArray(tempPricesChunk);
+      let avgPriceInChunk =
+        tempPricesChunk.reduce((a, b) => a + b) / tempPricesChunk.length;
+      dayPricesArr.push(
+        `minPrice: ${minPriceInChunk}, maxPrice: ${maxPriceInChunk}, avgPrice: ${avgPriceInChunk}`
+      );
+    }
 
     slicedByDatesVolumesArr.map((el) => {
       dayVolumesArr.push(getAverage(el));
@@ -78,10 +94,25 @@ const getCryptoDataOnRange = async (data) => {
     finalResult.whenToBuy = `Should't buy crypto at all`;
     finalResult.whenToSell = `No time to sell crypto`;
   } else {
-    finalResult.whenToBuy =
-      uniqueDates[dayPricesArr.indexOf(getMinFromArray(dayPricesArr))];
-    finalResult.whenToSell =
-      uniqueDates[dayPricesArr.indexOf(getMaxFromArray(dayPricesArr))];
+    if (Array.isArray(slicedByDatesPricesArr[0])) {
+      let minPricesArr = dayPricesArr.map((el) => {
+        return el.split(', ')[0].split('minPrice: ')[1];
+      });
+      let minPriceFromArr = getMinFromArray(minPricesArr);
+      let maxPricesArr = dayPricesArr.map((el) => {
+        return el.split(', ')[1].split('maxPrice: ')[1];
+      });
+      let maxPriceFromArr = getMaxFromArray(maxPricesArr);
+      finalResult.whenToBuy =
+        uniqueDates[minPricesArr.indexOf(String(minPriceFromArr))];
+      finalResult.whenToSell =
+        uniqueDates[maxPricesArr.indexOf(String(maxPriceFromArr))];
+    } else {
+      finalResult.whenToBuy =
+        uniqueDates[dayPricesArr.indexOf(getMinFromArray(dayPricesArr))];
+      finalResult.whenToSell =
+        uniqueDates[dayPricesArr.indexOf(getMaxFromArray(dayPricesArr))];
+    }
   }
 
   return finalResult;
