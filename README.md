@@ -1,3 +1,4 @@
+# Interview test app for handling crypto-statistics
 ## Getting Started
 
 First, run the development server:
